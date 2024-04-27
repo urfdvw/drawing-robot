@@ -32,10 +32,12 @@ class DrawingRobot:
         self.servo_right = servo.Servo(pwm_right, min_pulse = 500, max_pulse = 2500)
         
         # init
+        self.last_pen = False
+        self.last_left = 0
+        self.last_right = 0
+        self.use_pen(self.last_pen)
         self.set_left(0)
         self.set_right(0)
-        self.last_pen = False
-        self.use_pen(self.last_pen)
 
     def set_left(self, r):
         d = r / math.pi * 180
@@ -48,35 +50,57 @@ class DrawingRobot:
     def use_pen(self, use):
         if use:
             self.servo_pen.angle = 60
-            if use != self.last_pen:
-                time.sleep(0.5)
         else:
-            self.servo_pen.angle = 0
-        self.last_pen = use
-    
+            self.servo_pen.angle = 30 # 0: full
+            
+    def wait_move(self, pen, left, right):
+        time.sleep(max([
+            abs(self.last_left - left),
+            abs(self.last_right - right),
+        ]) * (0.8 if pen else 0.1)) # speed control
+        
+    def wait_pen(self, pen):
+        if pen != self.last_pen:
+            if pen:
+                time.sleep(0.3)
+            else:
+                time.sleep(0.1)
+        
+    def move(self, pen, left, right):
+        if pen:
+            self.set_left(left)
+            self.set_right(right)
+            self.wait_move(pen, left, right)
+            self.use_pen(pen)
+            self.wait_pen(pen)
+        else:
+            self.use_pen(pen)
+            self.wait_pen(pen)
+            self.set_left(left)
+            self.set_right(right)
+            self.wait_move(pen, left, right)
+        self.last_pen = pen
+        self.last_left = left
+        self.last_right = right
+        
 robot = DrawingRobot(board.GP4, board.GP5, board.GP6)
 
 #%%
+robot.move(False, 0, 0)
 pos_left = 0.0
 pos_right = 0.0
 # print('startplot:', 'r_left', 'r_right')
 while pos_left < math.pi * 4:
-    pos_left += math.pi * 0.002
-    pos_right += math.pi * 0.005
     r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
     r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
-    # print(r_left, r_right)
-    robot.set_left(r_left)
-    robot.set_right(r_right)
     if r_left < math.pi / 4 and r_right > math.pi / 4:
-        robot.use_pen(False)
-        time.sleep(0.003)
+        robot.move(False, r_left, r_right)
     else:
-        robot.use_pen(True)
-        time.sleep(0.01)
+        robot.move(True, r_left, r_right)
+    # print(r_left, r_right)
+    pos_left += math.pi * 0.002
+    pos_right += math.pi * 0.005
 
 #%%
-robot.set_left(0)
-robot.set_right(0)
-robot.use_pen(False)
+robot.move(False, 0, 0)
 time.sleep(5)
