@@ -21,35 +21,44 @@ import pwmio
 import math
 from adafruit_motor import servo
 
-pwm_pen = pwmio.PWMOut(board.GP4, duty_cycle=2 ** 15, frequency=50)
-pwm_left = pwmio.PWMOut(board.GP5, duty_cycle=2 ** 15, frequency=50)
-pwm_right = pwmio.PWMOut(board.GP6, duty_cycle=2 ** 15, frequency=50)
+class DrawingRobot:
+    def __init__(self, pen_pin, left_pin, right_pin):
+        pwm_pen = pwmio.PWMOut(pen_pin, duty_cycle=2 ** 15, frequency=50)
+        pwm_left = pwmio.PWMOut(left_pin, duty_cycle=2 ** 15, frequency=50)
+        pwm_right = pwmio.PWMOut(right_pin, duty_cycle=2 ** 15, frequency=50)
+        
+        self.servo_pen = servo.Servo(pwm_pen, min_pulse = 500, max_pulse = 2500)
+        self.servo_left = servo.Servo(pwm_left, min_pulse = 500, max_pulse = 2500)
+        self.servo_right = servo.Servo(pwm_right, min_pulse = 500, max_pulse = 2500)
+        
+        # init
+        self.set_left(0)
+        self.set_right(0)
+        self.last_pen = False
+        self.use_pen(self.last_pen)
 
-servo_pen = servo.Servo(pwm_pen, min_pulse = 500, max_pulse = 2500)
-servo_left = servo.Servo(pwm_left, min_pulse = 500, max_pulse = 2500)
-servo_right = servo.Servo(pwm_right, min_pulse = 500, max_pulse = 2500)
-
-def set_left(r):
-    d = r / math.pi * 180
-    servo_left.angle = 90 - d
+    def set_left(self, r):
+        d = r / math.pi * 180
+        self.servo_left.angle = 90 - d
+        
+    def set_right(self, r):
+        d = r / math.pi * 180
+        self.servo_right.angle = d + 80
+        
+    def use_pen(self, use):
+        if use:
+            self.servo_pen.angle = 60
+            if use != self.last_pen:
+                time.sleep(0.5)
+        else:
+            self.servo_pen.angle = 0
+        self.last_pen = use
     
-def set_right(r):
-    d = r / math.pi * 180
-    servo_right.angle = d + 80
-    
-def use_pen(use):
-    if use:
-        servo_pen.angle = 60
-    else:
-        servo_pen.angle = 0
-    
-servo_right.angle = (90 + 80)
-servo_left.angle = 0
+robot = DrawingRobot(board.GP4, board.GP5, board.GP6)
 
 #%%
 pos_left = 0.0
 pos_right = 0.0
-use_pen(False)
 # print('startplot:', 'r_left', 'r_right')
 while pos_left < math.pi * 4:
     pos_left += math.pi * 0.002
@@ -57,17 +66,17 @@ while pos_left < math.pi * 4:
     r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
     r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
     # print(r_left, r_right)
-    set_left(r_left)
-    set_right(r_right)
-    if r_left < 45 and r_right > 45:
-        use_pen(False)
+    robot.set_left(r_left)
+    robot.set_right(r_right)
+    if r_left < math.pi / 4 and r_right > math.pi / 4:
+        robot.use_pen(False)
         time.sleep(0.003)
     else:
-        use_pen(True)
+        robot.use_pen(True)
         time.sleep(0.01)
 
 #%%
-set_left(0)
-set_right(0)
-use_pen(False)
+robot.set_left(0)
+robot.set_right(0)
+robot.use_pen(False)
 time.sleep(5)
