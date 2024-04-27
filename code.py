@@ -33,20 +33,21 @@ servo_right = servo.Servo(pwm_right, min_pulse = 500, max_pulse = 2500)
 servo_pen.angle = 0
 r1 = 0.0
 r2 = 0.0
-print('startplot:', 'p1', 'p2')
+# print('startplot:', 'p1', 'p2')
 while r1 < math.pi * 4:
     r1 += math.pi * 0.002
     r2 += math.pi * 0.005
     p1 = (math.sin(r1) + 1) / 2 * 90
     p2 = (math.cos(r2) + 1) / 2 * 90
-    print(p1, p2)
+    # print(p1, p2)
     servo_left.angle = p1
     servo_right.angle = p2 + 13
     if p1 < 45 and p2 > 45:
         servo_pen.angle = 0
+        time.sleep(0.001)
     else:
         servo_pen.angle = 60
-    time.sleep(0.01)
+        time.sleep(0.01)
 
 servo_pen.angle = 0
 time.sleep(5)
