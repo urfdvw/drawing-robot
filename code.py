@@ -8,7 +8,7 @@
     - GP6
     - 0: back
     - 90: reach
-    - drift: + 13
+    - drift: + 80
 - lift
     - GP4
     - 60: pen down
@@ -29,25 +29,45 @@ servo_pen = servo.Servo(pwm_pen, min_pulse = 500, max_pulse = 2500)
 servo_left = servo.Servo(pwm_left, min_pulse = 500, max_pulse = 2500)
 servo_right = servo.Servo(pwm_right, min_pulse = 500, max_pulse = 2500)
 
-#%%
-servo_pen.angle = 0
-r1 = 0.0
-r2 = 0.0
-# print('startplot:', 'p1', 'p2')
-while r1 < math.pi * 4:
-    r1 += math.pi * 0.002
-    r2 += math.pi * 0.005
-    p1 = (math.sin(r1) + 1) / 2 * 90
-    p2 = (math.cos(r2) + 1) / 2 * 90
-    # print(p1, p2)
-    servo_left.angle = p1
-    servo_right.angle = p2 + 13
-    if p1 < 45 and p2 > 45:
-        servo_pen.angle = 0
-        time.sleep(0.001)
-    else:
+def set_left(r):
+    d = r / math.pi * 180
+    servo_left.angle = 90 - d
+    
+def set_right(r):
+    d = r / math.pi * 180
+    servo_right.angle = d + 80
+    
+def use_pen(use):
+    if use:
         servo_pen.angle = 60
+    else:
+        servo_pen.angle = 0
+    
+servo_right.angle = (90 + 80)
+servo_left.angle = 0
+
+#%%
+pos_left = 0.0
+pos_right = 0.0
+use_pen(False)
+# print('startplot:', 'r_left', 'r_right')
+while pos_left < math.pi * 4:
+    pos_left += math.pi * 0.002
+    pos_right += math.pi * 0.005
+    r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
+    r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
+    # print(r_left, r_right)
+    set_left(r_left)
+    set_right(r_right)
+    if r_left < 45 and r_right > 45:
+        use_pen(False)
+        time.sleep(0.003)
+    else:
+        use_pen(True)
         time.sleep(0.01)
 
-servo_pen.angle = 0
+#%%
+set_left(0)
+set_right(0)
+use_pen(False)
 time.sleep(5)
