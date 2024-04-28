@@ -21,8 +21,23 @@ import pwmio
 import math
 from adafruit_motor import servo
 
+def p2(x):
+    """Power of 2."""
+    return x * x
+
 class DrawingRobot:
-    def __init__(self, pen_pin, left_pin, right_pin):
+    def __init__(
+        self,
+        pen_pin,
+        left_pin,
+        right_pin,
+        a,
+        b,
+        c,
+        d
+    ):
+        self.a, self.b, self.c, self.d = a, b, c, d
+        
         pwm_pen = pwmio.PWMOut(pen_pin, duty_cycle=2 ** 15, frequency=50)
         pwm_left = pwmio.PWMOut(left_pin, duty_cycle=2 ** 15, frequency=50)
         pwm_right = pwmio.PWMOut(right_pin, duty_cycle=2 ** 15, frequency=50)
@@ -83,24 +98,104 @@ class DrawingRobot:
         self.last_left = left
         self.last_right = right
         
-robot = DrawingRobot(board.GP4, board.GP5, board.GP6)
+    def move_xy(self, pen, x0, y0):
+        a, b, c, d = self.a, self.b, self.c, self.d
+        k1A = (a - x0) / y0
+        k0A = (p2(c + d) + p2(a) - p2(b) - p2(x0) - p2(y0)) / (-2 * y0)
+        # print(k1A, k0A)
+        aA = 1 + p2(k1A)
+        bA = 2 * (-a + k1A * k0A)
+        cA = p2(a) + p2(k0A) - p2(b)
+        
+        under_root_A = p2(bA) - 4 * aA * cA
+        if under_root_A < 0:
+            return False
+        xA = (-bA + math.sqrt(under_root_A))/(2 * aA)
+        yA = k1A * xA  + k0A
+        angle_right = math.atan2(yA, xA - a)
+        # print(xA, yA)
+        # print(angle_left / math.pi * 180)
+        
+        x1 = (x0 - xA) * c / (c + d) + xA
+        y1 = (y0 - yA) * c / (c + d) + yA
+        
+        k1B = (-a - x1) / y1
+        k0B = (p2(c) + p2(-a) - p2(b) - p2(x1) - p2(y1)) / (-2 * y1)
+        # print(k1B, k0B)
+        aB = 1 + p2(k1B)
+        bB = 2 * (a + k1B * k0B)
+        cB = p2(-a) + p2(k0B) - p2(b)
+        
+        under_root_B = p2(bB) - 4 * aB * cB
+        if under_root_B < 0:
+            return False
+        xB = (-bB - math.sqrt(under_root_B))/(2 * aB)
+        yB = k1B * xB  + k0B
+        angle_left = math.atan2(yB, -xB - a)
+        # print(xB, yB)
+        # print(angle_right / math.pi * 180)
+        if (
+            angle_left > -20 / 180 * math.pi and
+            angle_left < math.pi / 2 and
+            angle_right > -20 / 180 * math.pi and
+            angle_right < math.pi / 2
+        ):
+            self.move(pen, angle_left, angle_right)
+            return True
+        else:
+            return False
+        
+robot = DrawingRobot(
+    board.GP4,
+    board.GP5,
+    board.GP6,
+    23.2,
+    30.0,
+    60.0,
+    12.5
+)
 
 #%%
 robot.move(False, 0, 0)
-pos_left = 0.0
-pos_right = 0.0
-# print('startplot:', 'r_left', 'r_right')
-while pos_left < math.pi * 4:
-    r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
-    r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
-    if r_left < math.pi / 4 and r_right > math.pi / 4:
-        robot.move(False, r_left, r_right)
-    else:
-        robot.move(True, r_left, r_right)
-    # print(r_left, r_right)
-    pos_left += math.pi * 0.002
-    pos_right += math.pi * 0.005
 
+# pos_left = 0.0
+# pos_right = 0.0
+# # print('startplot:', 'r_left', 'r_right')
+# while pos_left < math.pi * 4:
+#     r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
+#     r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
+#     if r_left < math.pi / 4 and r_right > math.pi / 4:
+#         robot.move(False, r_left, r_right)
+#     else:
+#         robot.move(True, r_left, r_right)
+#     # print(r_left, r_right)
+#     pos_left += math.pi * 0.002
+#     pos_right += math.pi * 0.005
+
+N = 40
+x_min = -60
+x_max = 60
+y_min = 30
+y_max = 150
+print('startplot:', 'x', 'y')
+for ix in range(N + 1):
+    new = True
+    for iy in range(N + 1):
+        x = ix / N * (x_max - x_min) + x_min
+        y = iy / N * (y_max - y_min) + y_min
+        if robot.move_xy(not new, x, y):
+            new = False
+            print(x, y)
+
+for iy in range(N + 1):
+    new = True
+    for ix in range(N + 1):
+        x = ix / N * (x_max - x_min) + x_min
+        y = iy / N * (y_max - y_min) + y_min
+        if robot.move_xy(not new, x, y):
+            new = False
+            print(x, y)
+        
 #%%
 robot.move(False, 0, 0)
 time.sleep(5)
