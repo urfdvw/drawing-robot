@@ -15,9 +15,9 @@
     - 0: pen raise
 """
 
-# from test_gcode import *
-# import sys
-# sys.exit()
+from test_gcode import *
+import sys
+sys.exit()
 #%%
 
 import time
@@ -25,7 +25,6 @@ import board
 import pwmio
 import math
 from adafruit_motor import servo
-gcode_name = 'github.gcode'
 
 def p2(x):
     """Power of 2."""
@@ -85,7 +84,7 @@ class DrawingRobot:
             if pen:
                 time.sleep(0.3)
             else:
-                time.sleep(0.3)
+                time.sleep(0.1)
         
     def move(self, pen, left, right):
         if pen:
@@ -164,48 +163,43 @@ robot = DrawingRobot(
 #%%
 robot.move(False, 0, 0)
 
-last_x = 0
-last_y = 0
+# pos_left = 0.0
+# pos_right = 0.0
+# # print('startplot:', 'r_left', 'r_right')
+# while pos_left < math.pi * 4:
+#     r_left = (math.sin(pos_left) + 1) / 2 * math.pi / 2
+#     r_right = (math.cos(pos_right) + 1) / 2 * math.pi / 2
+#     if r_left < math.pi / 4 and r_right > math.pi / 4:
+#         robot.move(False, r_left, r_right)
+#     else:
+#         robot.move(True, r_left, r_right)
+#     # print(r_left, r_right)
+#     pos_left += math.pi * 0.002
+#     pos_right += math.pi * 0.005
 
-min_x = float('inf')
-max_x = float('-inf')
-min_y = float('inf')
-max_y = float('-inf')
-
-target_min_x = -25
-target_max_x = 15
-target_min_y = 45
-target_max_y = 85
-with open(gcode_name) as f:
-    for line in f:
-        commands = line.strip().split(' ')
-        if commands[0] == 'G0' or commands[0] == 'G1':
-            x = float(commands[1][1:])
-            y = float(commands[2][1:])
-            min_x = min(x, min_x)
-            max_x = max(x, max_x)
-            min_y = min(y, min_y)
-            max_y = max(y, max_y)
-
+N = 40
+x_min = -60
+x_max = 60
+y_min = 30
+y_max = 150
 print('startplot:', 'x', 'y')
-with open(gcode_name) as f:
-    for line in f:
-        commands = line.strip().split(' ')
-        if commands[0] == 'G0' or commands[0] == 'G1':
-            x = float(commands[1][1:]) 
-            x = (x - min_x) / (max_x - min_x) * (target_max_x - target_min_x) + target_min_x
-            y = float(commands[2][1:])
-            y = (y - min_y) / (max_y - min_y) * (target_max_y - target_min_y) + target_min_y
-            if commands[0] == 'G1':
-                if abs(p2(x - last_x) + p2(y - last_y)) < p2(0.5):
-                    continue
+for ix in range(N + 1):
+    new = True
+    for iy in range(N + 1):
+        x = ix / N * (x_max - x_min) + x_min
+        y = iy / N * (y_max - y_min) + y_min
+        if robot.move_xy(not new, x, y):
+            new = False
             print(x, y)
-            last_x = x
-            last_y = y
-        if commands[0] == 'G0':
-            robot.move_xy(False, x, y)
-        if commands[0] == 'G1':
-            robot.move_xy(True, x, y)
+
+for iy in range(N + 1):
+    new = True
+    for ix in range(N + 1):
+        x = ix / N * (x_max - x_min) + x_min
+        y = iy / N * (y_max - y_min) + y_min
+        if robot.move_xy(not new, x, y):
+            new = False
+            print(x, y)
         
 #%%
 robot.move(False, 0, 0)
