@@ -25,7 +25,7 @@ import board
 import pwmio
 import math
 from adafruit_motor import servo
-gcode_name = 'dog.gcode'
+from connected_variables import ConnectedVariables
 
 def p2(x):
     """Power of 2."""
@@ -78,7 +78,7 @@ class DrawingRobot:
         time.sleep(max([
             abs(self.last_left - left),
             abs(self.last_right - right),
-        ]) * (0.2 if pen else 0.2)) # speed control
+        ]) * (0.2 if pen else 0.1)) # speed control
         
     def wait_pen(self, pen):
         if pen != self.last_pen:
@@ -164,49 +164,9 @@ robot = DrawingRobot(
 #%%
 robot.move(False, 0, 0)
 
-last_x = 0
-last_y = 0
+cv = ConnectedVariables()
+cv.define('draw_pos', {'x': 0, 'y': 50, 'z': 0})
 
-min_x = float('inf')
-max_x = float('-inf')
-min_y = float('inf')
-max_y = float('-inf')
-
-target_min_x = -25
-target_max_x = 15
-target_min_y = 45
-target_max_y = 85
-with open(gcode_name) as f:
-    for line in f:
-        commands = line.strip().split(' ')
-        if commands[0] == 'G0' or commands[0] == 'G1':
-            x = float(commands[1][1:])
-            y = float(commands[2][1:])
-            min_x = min(x, min_x)
-            max_x = max(x, max_x)
-            min_y = min(y, min_y)
-            max_y = max(y, max_y)
-
-print('startplot:', 'x', 'y')
-with open(gcode_name) as f:
-    for line in f:
-        commands = line.strip().split(' ')
-        if commands[0] == 'G0' or commands[0] == 'G1':
-            x = float(commands[1][1:]) 
-            x = (x - min_x) / (max_x - min_x) * (target_max_x - target_min_x) + target_min_x
-            y = float(commands[2][1:])
-            y = (y - min_y) / (max_y - min_y) * (target_max_y - target_min_y) + target_min_y
-            if commands[0] == 'G1':
-                if abs(p2(x - last_x) + p2(y - last_y)) < p2(0.5):
-                    continue
-            print(x, y)
-            last_x = x
-            last_y = y
-        if commands[0] == 'G0':
-            robot.move_xy(False, x, y)
-        if commands[0] == 'G1':
-            robot.move_xy(True, x, y)
-        
-#%%
-robot.move(False, 0, 0)
-time.sleep(5)
+while True:
+    pos = cv.read('draw_pos')
+    robot.move_xy(bool(pos['z']), pos['x'], pos['y'])
