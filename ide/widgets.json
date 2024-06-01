@@ -1,0 +1,13 @@
+[
+  {
+    "id": 0,
+    "widgetType": "Cursor",
+    "variableName": "draw_pos",
+    "x": 30,
+    "y": 30,
+    "xMin": -25,
+    "xMax": 15,
+    "yMin": 45,
+    "yMax": 85
+  }
+]

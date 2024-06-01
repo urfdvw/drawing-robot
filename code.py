@@ -78,7 +78,7 @@ class DrawingRobot:
         time.sleep(max([
             abs(self.last_left - left),
             abs(self.last_right - right),
-        ]) * (0.8 if pen else 0.1)) # speed control
+        ]) * (0.2 if pen else 0.1)) # speed control
         
     def wait_pen(self, pen):
         if pen != self.last_pen:
