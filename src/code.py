@@ -18,7 +18,7 @@ robot = DrawingRobot(
 robot.move(False, 0, 0)
 
 cv = ConnectedVariables()
-cv.define('draw_pos', {'x': 0, 'y': 50, 'z': 0})
+cv.define('p', [0, 50, 0]) # [x, y, pen]
 cv.define('file', '')
 
 while True:
@@ -29,5 +29,5 @@ while True:
         #     pass
         cv.write('file', '')
     else:
-        pos = cv.read('draw_pos')
-        robot.move_xy(bool(pos['z']), pos['x'], pos['y'])
+        pos = cv.read('p')
+        robot.move_xy(bool(pos[2]), pos[0], pos[1])

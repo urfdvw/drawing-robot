@@ -1,29 +1,39 @@
 [
   {
     "id": 0,
-    "widgetType": "Cursor",
-    "variableName": "draw_pos",
-    "x": 30,
-    "y": 30,
-    "xMin": -25,
-    "xMax": 15,
-    "yMin": 45,
-    "yMax": 85
+    "widgetType": "Set",
+    "variableName": "file",
+    "description": "one of: maker, cat, dog, owl, github, python",
+    "x": 34,
+    "y": 540,
+    "type": "string"
   },
   {
     "id": 1,
     "widgetType": "Display",
     "variableName": "file",
     "description": "now drawing",
-    "x": 373,
-    "y": 28
+    "x": 432,
+    "y": 540
   },
   {
     "id": 2,
-    "widgetType": "Set",
-    "variableName": "file",
-    "description": "one of: maker, cat, dog, owl, github, python",
-    "x": 34,
-    "y": 540
+    "widgetType": "Cursor",
+    "variableName": "p",
+    "x": 30,
+    "y": 30,
+    "xMin": -25,
+    "xMax": 15,
+    "yMin": 45,
+    "yMax": 85,
+    "period": 0.13
+  },
+  {
+    "id": 3,
+    "widgetType": "Display",
+    "variableName": "p",
+    "description": "Position",
+    "x": 376,
+    "y": 29
   }
 ]

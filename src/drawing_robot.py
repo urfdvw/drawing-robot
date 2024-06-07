@@ -140,6 +140,11 @@ def drawGcode(robot, gcode_name):
     target_max_x = 15
     target_min_y = 45
     target_max_y = 85
+    try:
+        open(gcode_name)
+    except:
+        print("no such file")
+        return
     with open(gcode_name) as f:
         for line in f:
             commands = line.strip().split(' ')
